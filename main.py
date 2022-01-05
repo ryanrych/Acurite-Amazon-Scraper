@@ -29,17 +29,21 @@ def generateSKUASINPairs():
 
     return pairs
 
-
 SKUASPPairs = generateSKUASPPairs()
 SKUASINPairs = generateSKUASINPairs()
 
-for pair in SKUASINPairs:
+data = {"SKU":[],
+      "ASIN":[],
+      "ASP":[],
+      "Current Lowest Price":[]}
+
+for sku in SKUASINPairs:
 
     driver = webdriver.Chrome('C:\\Users\\ryanj\..PROGRAMS\Python\Acurite-Amazon-Scraper\chromedriver')
 
-    url = "https://camelcamelcamel.com/product/" + SKUASINPairs[pair]
+    url = "https://camelcamelcamel.com/product/" + SKUASINPairs[sku]
 
-    print("ASIN:", SKUASINPairs[pair])
+    print("ASIN:", SKUASINPairs[sku])
 
     driver.get(url)
     # sleep(5)
@@ -55,5 +59,17 @@ for pair in SKUASINPairs:
         if priceTag == "":
             driver.close()
         else:
-            print(priceTag.text)
+
+            data["SKU"].append(sku)
+            data["ASIN"].append(SKUASINPairs[sku])
+            try:
+                data["ASP"].append(SKUASPPairs[sku])
+            except:
+                data["ASP"].append("not found")
+            data["Current Lowest Price"].append(priceTag.text)
+
             driver.close()
+
+df = pd.DataFrame(data)
+
+print(df)
