@@ -5,49 +5,28 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-def generateSKUASPPairs():
-    skus = pd.read_excel("products_table.xlsx", usecols="A").transpose()
 
-    asps = pd.read_excel("products_table.xlsx", usecols="B").transpose()
-
-    pairs = {}
-
-    for i in range(len(skus.columns)):
-        pairs[skus.iloc[0][i]] = asps.iloc[0][i]
-
-    return pairs
-
-def generateSKUASINPairs():
-    skus = pd.read_excel("asin_skus.xlsx", usecols="B").transpose()
-
-    asins = pd.read_excel("asin_skus.xlsx", usecols="A").transpose()
+def generateASPASINPairs():
+    skus = pd.read_excel("ASIN_ASP_Pairs.xlsx", usecols="A").transpose()
+    asins = pd.read_excel("ASIN_ASP_Pairs.xlsx", usecols="B").transpose()
+    asps = pd.read_excel("ASIN_ASP_Pairs.xlsx", usecols="C").transpose()
 
     pairs = {}
 
     for i in range(len(skus.columns)):
-        pairs[skus.iloc[0][i]] = asins.iloc[0][i]
+        pairs[skus.iloc[0][i]] = {"ASIN": asins.iloc[0][i], "ASP": asps.iloc[0][i], "Current Lowest Price": -1}
 
     return pairs
 
-SKUASPPairs = generateSKUASPPairs()
-SKUASINPairs = generateSKUASINPairs()
+ASPASINPairs = generateASPASINPairs()
 
-data = {"SKU":[],
-      "ASIN":[],
-      "ASP":[],
-      "Current Lowest Price":[]}
-
-for sku in SKUASINPairs:
+for sku in ASPASINPairs:
 
     driver = webdriver.Chrome('C:\\Users\\ryanj\..PROGRAMS\Python\Acurite-Amazon-Scraper\chromedriver')
 
-    url = "https://camelcamelcamel.com/product/" + SKUASINPairs[sku]
-
-    print("ASIN:", SKUASINPairs[sku])
+    url = "https://camelcamelcamel.com/product/" + ASPASINPairs[sku]["ASIN"]
 
     driver.get(url)
-    # sleep(5)
-    # priceTag = driver.find_element_by_xpath("//span[@class=\"stat\"]")
     priceTag = ""
     try:
         priceTag = WebDriverWait(driver, 100).until(
@@ -59,23 +38,14 @@ for sku in SKUASINPairs:
         if priceTag == "":
             driver.close()
         else:
-
-            data["SKU"].append(sku)
-            data["ASIN"].append(SKUASINPairs[sku])
-            try:
-                data["ASP"].append(SKUASPPairs[sku])
-            except:
-                data["ASP"].append("not found")
-            data["Current Lowest Price"].append(priceTag.text)
-
+            ASPASINPairs[sku]["Current Lowest Price"] = priceTag.text
             driver.close()
 
-    if (input() == "1"):
-        break
+            print(sku + ": " + ASPASINPairs[sku]["Current Lowest Price"])
 
-df = pd.DataFrame(data)
+df = pd.DataFrame(ASPASINPairs).transpose()
 
-#df["Current Lowest Price"][1] = 2
+df.to_excel("aspData.xlsx")
 
 try:
     writer = pd.ExcelWriter("aspData.xlsx", engine="xlsxwriter")
@@ -85,11 +55,9 @@ try:
     ws = writer.sheets["Sheet1"]
 
     lowCostFormat = wb.add_format()
-    lowCostFormat.set_bg_color("red")
-    ws.conditional_format("D2:E{}".format(len(df) + 1), {"type": "formula", "criteria": "=$D2>$E2", "format": lowCostFormat})
+    lowCostFormat.set_bg_color("#cc0000")
+    ws.conditional_format("C2:D{}".format(len(df) + 1), {"type": "formula", "criteria": "=$C2>$D2", "format": lowCostFormat})
 
     writer.close()
 except:
     raise Exception("Please close the aspData.xlsx file and run again.")
-
-print(df)
