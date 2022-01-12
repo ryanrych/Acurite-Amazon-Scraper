@@ -70,6 +70,26 @@ for sku in SKUASINPairs:
 
             driver.close()
 
+    if (input() == "1"):
+        break
+
 df = pd.DataFrame(data)
+
+#df["Current Lowest Price"][1] = 2
+
+try:
+    writer = pd.ExcelWriter("aspData.xlsx", engine="xlsxwriter")
+
+    df.to_excel(writer, sheet_name="Sheet1")
+    wb = writer.book
+    ws = writer.sheets["Sheet1"]
+
+    lowCostFormat = wb.add_format()
+    lowCostFormat.set_bg_color("red")
+    ws.conditional_format("D2:E{}".format(len(df) + 1), {"type": "formula", "criteria": "=$D2>$E2", "format": lowCostFormat})
+
+    writer.close()
+except:
+    raise Exception("Please close the aspData.xlsx file and run again.")
 
 print(df)
