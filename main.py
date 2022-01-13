@@ -1,5 +1,4 @@
 import pandas as pd
-from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -36,12 +35,10 @@ for sku in ASPASINPairs:
         pass
     finally:
         if priceTag == "":
-            driver.close()
+            driver.quit()
         else:
-            ASPASINPairs[sku]["Current Lowest Price"] = priceTag.text
-            driver.close()
-
-            print(sku + ": " + ASPASINPairs[sku]["Current Lowest Price"])
+            ASPASINPairs[sku]["Current Lowest Price"] = priceTag.text[1:]
+            driver.quit()
 
 df = pd.DataFrame(ASPASINPairs).transpose()
 
