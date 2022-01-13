@@ -13,7 +13,7 @@ def generateASPASINPairs():
     pairs = {}
 
     for i in range(len(skus.columns)):
-        pairs[skus.iloc[0][i]] = {"ASIN": asins.iloc[0][i], "ASP": asps.iloc[0][i], "Current Lowest Price": -1}
+        pairs[skus.iloc[0][i]] = {"ASIN": asins.iloc[0][i], "ASP": float(asps.iloc[0][i]), "Current Lowest Price": -1}
 
     return pairs
 
@@ -37,7 +37,7 @@ for sku in ASPASINPairs:
         if priceTag == "":
             driver.quit()
         else:
-            ASPASINPairs[sku]["Current Lowest Price"] = priceTag.text[1:]
+            ASPASINPairs[sku]["Current Lowest Price"] = float(priceTag.text[1:])
             driver.quit()
 
 df = pd.DataFrame(ASPASINPairs).transpose()
